@@ -1,14 +1,11 @@
-
-# CreaciÃ³n de una base de datos
-
-```sql
+-- Creación de una base de datos
 create database paquitabd
 on primary 
 (
    Name=paquitabdData, filename='/var/opt/mssql/data/datanueva/paquitabd.mdf'
-   ,size = 50MB -- El tamaÃ±o minimo es 512kb, el predeterminado es 1MB
-   ,Filegrowth=25% -- El default es 10%
-   ,maxsize = 400MB
+   ,size = 50MB -- El tamaño minimo es 512kb, el predeterminado es 1MB
+   ,Filegrowth=25% -- El default es 10%, -- El minimo es de 64kb
+   ,maxsize = 400MB 
 )
 log on
 (
@@ -28,12 +25,19 @@ ADD FILE
   FILEGROWTH=10MB  -- El minimo es de 64kb
 )TO FILEGROUP[PRIMARY]; 
 
--- CREACIÃ“N DE UN ARCHIVO ASOCIADO AL FILEGROUP
+
+-- Creación de un FileGroup Adicional
+Alter DATABASE paquitabd
+ADD FILEGROUP SECUNDARIO
+GO
+
+-- CREACIÓN DE UN ARCHIVO ASOCIAO AL FILEGROUP
 ALTER DATABASE paquitabd
 ADD FILE (
    NAME='paquitabd_parte1',
    FILENAME='/var/opt/mssql/data/datanueva/paquitabd_SECUNDARIO.ndf'	
 )TO FILEGROUP SECUNDARIO
+
 
 use paquitabd
 go
@@ -75,15 +79,31 @@ create table comparadocontigo(
 	unique(nombredelanimal)
 )
 
-
--- REVISION DEL ESTADO DE LA OPCIÃ“N DE AJUSTE AUTOMATO DEL TAMAÃ‘O DE ARCHIVOS
+-- REVISION DEL ESTADO DE LA OPCIÓN DE AJUSTE AUTOMATO DEL TAMAÑO DE ARCHIVOS
 
 SELECT DATABASEPROPERTYEX('paquitabd', 'ISAUTOSHRINK')
 
--- Cambia la opciÃ³n de AutoShrink a true
+-- Cambia la opción de AutoShrink a true
 ALTER DATABASE paquitabd
 SET AUTO_SHRINK ON WITH NO_WAIT
 go
 
+-- REVISION DEL ESTADO DE LA OPCIÓN DE CREACIÓN DE ESTADISTICAS
+SELECT DATABASEPROPERTYEX('paquitabd', 'IsAutoCreateStatistics')
 
-```
+ALTER DATABASE paquitabd
+SET AUTO_CREATE_STATISTICS ON
+Go
+
+-- Consultar información de la base de datos
+use master
+go
+SP_helpdb paquitabd
+go
+
+USE paquitabd
+go
+-- Consultar la información de grupos
+SP_HELPFILEGROUP SECUNDARIO
+
+
